@@ -1,0 +1,43 @@
+name: Build Pinfolder installer
+
+on:
+  push:
+    branches:
+      - claude/offline-moodboard-platform-research-ndjw0q
+    paths:
+      - "pinfolder/**"
+      - ".github/workflows/pinfolder-build.yml"
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install frontend dependencies
+        working-directory: pinfolder
+        run: bun install
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: pinfolder
+          tagName: pinfolder-preview
+          releaseName: "Pinfolder — Windows preview build"
+          releaseBody: |
+            Automatically built from the latest `pinfolder/` source on
+            `claude/offline-moodboard-platform-research-ndjw0q`. This tag is
+            reused on every push, so this release always reflects the most
+            recent code — download the `.msi` below, run it, done.
+          releaseDraft: false
+          prerelease: true
